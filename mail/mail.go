@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/google/uuid"
@@ -28,7 +29,11 @@ func BuildMessage(m struts.Mail) []byte {
 	msg.WriteString(m.Body + "\r\n")
 
 	for _, image := range m.GetImage() {
-		attachImage(image, boundary, &msg)
+		attachDoc(image, boundary, &msg)
+	}
+
+	for _, doc := range m.GetDocument() {
+		attachDoc(doc, boundary, &msg)
 	}
 
 	msg.WriteString(fmt.Sprintf("--%s--\r\n", boundary))
@@ -46,8 +51,8 @@ func ReadTemplate(path string) string {
 	return string(content)
 }
 
-func ReadImages(path string) []struts.Image {
-	var images []struts.Image
+func ReadFiles(path string) []struts.Document {
+	var documents []struts.Document
 
 	files, err := ioutil.ReadDir(path)
 
@@ -57,34 +62,38 @@ func ReadImages(path string) []struts.Image {
 
 	for _, file := range files {
 		if !file.IsDir() {
-			f, err2 := ioutil.ReadFile(path + "/" + file.Name())
-			if err2 != nil {
-				log.Println(err)
+			if !strings.HasPrefix(file.Name(), ".") {
+				f, err2 := ioutil.ReadFile(path + "/" + file.Name())
+				if err2 != nil {
+					log.Println(err)
+				}
+				contentType := http.DetectContentType(f)
+				b := make([]byte, base64.StdEncoding.EncodedLen(len(f)))
+				base64.StdEncoding.Encode(b, f)
+				doc := struts.Document{
+					Id:          file.Name(),
+					Content:     b,
+					ContentType: contentType,
+				}
+				documents = append(documents, doc)
 			}
-			b := make([]byte, base64.StdEncoding.EncodedLen(len(f)))
-			base64.StdEncoding.Encode(b, f)
-			img := struts.Image{
-				Id:      file.Name(),
-				Content: b,
-			}
-			images = append(images, img)
 		}
 	}
 
-	return images
+	return documents
 }
 
-func attachImage(image struts.Image, boundary string, msg *bytes.Buffer) {
+func attachDoc(doc struts.Document, boundary string, msg *bytes.Buffer) {
 
-	contentId := strings.Split(image.Id, ".")[0]
+	contentId := strings.Split(doc.Id, ".")[0]
 
 	msg.WriteString("\r\n")
 	msg.WriteString(fmt.Sprintf("--%s\r\n", boundary))
-	msg.WriteString(fmt.Sprintf("Content-Type: image/jpeg; name=\"%s\"\r\n", image.Id))
-	msg.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=\"%s\"\r\n", image.Id))
+	msg.WriteString(fmt.Sprintf("Content-Type: %s; name=\"%s\"\r\n", doc.ContentType, doc.Id))
+	msg.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=\"%s\"\r\n", doc.Id))
 	msg.WriteString("Content-Transfer-Encoding: base64\r\n")
 	msg.WriteString(fmt.Sprintf("X-Attachment-Id: %s\r\n", contentId))
 	msg.WriteString(fmt.Sprintf("Content-ID: <%s>\r\n", contentId))
-	msg.Write(image.Content)
+	msg.Write(doc.Content)
 	msg.WriteString("\r\n")
 }

@@ -5,7 +5,7 @@ type Mail struct {
 	To       string
 	Subject  string
 	Body     string
-	Image    []Image
+	Image    []Document
 	Document []Document
 }
 
@@ -25,7 +25,7 @@ func (s *Mail) SetBody(body string) {
 	s.Body = body
 }
 
-func (s *Mail) SetImage(image []Image) {
+func (s *Mail) SetImage(image []Document) {
 	s.Image = image
 }
 
@@ -49,7 +49,7 @@ func (s *Mail) GetBody() string {
 	return s.Body
 }
 
-func (s *Mail) GetImage() []Image {
+func (s *Mail) GetImage() []Document {
 	return s.Image
 }
 
