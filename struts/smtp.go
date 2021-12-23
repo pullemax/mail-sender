@@ -1,112 +1,94 @@
 package struts
 
 type Smtp struct {
-	host         string
-	port         string
-	user         string
-	password     string
-	from         string
-	subject      string
-	image        bool
-	pathImage    string
-	document     bool
-	pathDocument string
-	template     string
-	recipients   string
+	Host         string
+	Port         string
+	User         string
+	Password     string
+	From         string
+	Subject      string
+	PathImage    string
+	PathDocument string
+	Template     string
+	Recipients   string
 }
 
 func (s *Smtp) SetHost(host string) {
-	s.host = host
+	s.Host = host
 }
 
 func (s *Smtp) SetPort(port string) {
-	s.port = port
+	s.Port = port
 }
 
 func (s *Smtp) SetUser(user string) {
-	s.user = user
+	s.User = user
 }
 
 func (s *Smtp) SetPassword(password string) {
-	s.password = password
+	s.Password = password
 }
 
 func (s *Smtp) SetFrom(from string) {
-	s.from = from
+	s.From = from
 }
 
 func (s *Smtp) SetSubject(subject string) {
-	s.subject = subject
-}
-
-func (s *Smtp) SetImage(image bool) {
-	s.image = image
+	s.Subject = subject
 }
 
 func (s *Smtp) SetPathImage(pathImage string) {
-	s.pathImage = pathImage
-}
-
-func (s *Smtp) SetDocument(document bool) {
-	s.document = document
+	s.PathImage = pathImage
 }
 
 func (s *Smtp) SetPathDocument(pathDocument string) {
-	s.pathDocument = pathDocument
+	s.PathDocument = pathDocument
 }
 
 func (s *Smtp) SetTemplate(template string) {
-	s.template = template
+	s.Template = template
 }
 
 func (s *Smtp) SetRecipients(recipients string) {
-	s.recipients = recipients
+	s.Recipients = recipients
 }
 
 func (s *Smtp) GetHost() string {
-	return s.host
+	return s.Host
 }
 
 func (s *Smtp) GetPort() string {
-	return s.port
+	return s.Port
 }
 
 func (s *Smtp) GetUser() string {
-	return s.user
+	return s.User
 }
 
 func (s *Smtp) GetPassword() string {
-	return s.password
+	return s.Password
 }
 
 func (s *Smtp) GetFrom() string {
-	return s.from
+	return s.From
 }
 
 func (s *Smtp) GetSubject() string {
-	return s.subject
-}
-
-func (s *Smtp) GetImage() bool {
-	return s.image
-}
-
-func (s *Smtp) GetDocument() bool {
-	return s.document
+	return s.Subject
 }
 
 func (s *Smtp) GetPathImage() string {
-	return s.pathImage
+	return s.PathImage
 }
 
 func (s *Smtp) GetPathDocument() string {
-	return s.pathDocument
+	return s.PathDocument
 }
 
 func (s *Smtp) GetTemplate() string {
-	return s.template
+	return s.Template
 }
 
 func (s *Smtp) GetRecipients() string {
-	return s.recipients
+	return s.Recipients
 }

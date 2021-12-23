@@ -2,51 +2,34 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"html/template"
 	"log"
 	"net/smtp"
-	"os"
 
 	"github.com/pullemax/mail-sender/mail"
 	"github.com/pullemax/mail-sender/struts"
 )
 
 func main() {
-	args := os.Args
 	var auth smtp.Auth
 	var msg []byte
 	var templateContent string
 	var commonImages []struts.Document
 	var commonDocuments []struts.Document
-
 	var smtpV = struts.Smtp{}
 
-	for i := 0; i < len(args); i++ {
-		switch args[i] {
-		case "-host":
-			smtpV.SetHost(args[i+1])
-		case "-port":
-			smtpV.SetPort(args[i+1])
-		case "-user":
-			smtpV.SetUser(args[i+1])
-		case "-password":
-			smtpV.SetPassword(args[i+1])
-		case "-from":
-			smtpV.SetFrom(args[i+1])
-		case "-subject":
-			smtpV.SetSubject(args[i+1])
-		case "-image":
-			smtpV.SetImage(true)
-			smtpV.SetPathImage(args[i+1])
-		case "-document":
-			smtpV.SetDocument(true)
-			smtpV.SetPathDocument(args[i+1])
-		case "-template":
-			smtpV.SetTemplate(args[i+1])
-		case "-recipients":
-			smtpV.SetRecipients(args[i+1])
-		}
-	}
+	flag.StringVar(&smtpV.Host, "host", "", "SMTP host")
+	flag.StringVar(&smtpV.Port, "port", "", "SMTP port")
+	flag.StringVar(&smtpV.User, "user", "", "SMTP auth user")
+	flag.StringVar(&smtpV.Password, "password", "", "SMTP auth password")
+	flag.StringVar(&smtpV.From, "from", "", "From email user")
+	flag.StringVar(&smtpV.Subject, "subject", "", "Email Subject")
+	flag.StringVar(&smtpV.PathImage, "image", "", "Image directory that the program will use to attach the images to the email")
+	flag.StringVar(&smtpV.PathDocument, "document", "", "Document directory that the program will use to attach the docuents to the email")
+	flag.StringVar(&smtpV.Template, "template", "", "Email template to send")
+	flag.StringVar(&smtpV.Recipients, "recipients", "", "File with the recipients of the email")
+	flag.Parse()
 
 	if smtpV.GetHost() == "" || smtpV.GetPort() == "" {
 		log.Fatalln("SMTP host and port not found. You need to use -host and -port params")
@@ -64,11 +47,11 @@ func main() {
 
 	recipients := mail.GetRecipients(smtpV.GetRecipients())
 
-	if smtpV.GetImage() {
+	if smtpV.GetPathImage() != "" {
 		commonImages = mail.ReadFiles(smtpV.GetPathImage())
 	}
 
-	if smtpV.GetDocument() {
+	if smtpV.GetPathDocument() != "" {
 		commonDocuments = mail.ReadFiles(smtpV.GetPathDocument())
 	}
 
