@@ -7,17 +7,17 @@ import (
 	"log"
 	"net/smtp"
 
-	"github.com/pullemax/mail-sender/mail"
 	"github.com/pullemax/mail-sender/struts"
 )
 
 func main() {
 	var auth smtp.Auth
-	var msg []byte
 	var templateContent string
 	var commonImages []struts.Document
 	var commonDocuments []struts.Document
 	var smtpV = struts.Smtp{}
+	var r struts.Recipient
+	var m struts.Mail
 
 	flag.StringVar(&smtpV.Host, "host", "", "SMTP host")
 	flag.StringVar(&smtpV.Port, "port", "", "SMTP port")
@@ -31,37 +31,41 @@ func main() {
 	flag.StringVar(&smtpV.Recipients, "recipients", "", "File with the recipients of the email")
 	flag.Parse()
 
-	if smtpV.GetHost() == "" || smtpV.GetPort() == "" {
+	if smtpV.Host == "" || smtpV.Port == "" {
 		log.Fatalln("SMTP host and port not found. You need to use -host and -port params")
 	}
 
-	if smtpV.GetUser() != "" && smtpV.GetPassword() != "" {
-		auth = smtp.PlainAuth("", smtpV.GetUser(), smtpV.GetPassword(), smtpV.GetHost())
+	if smtpV.User != "" && smtpV.Password != "" {
+		auth = smtp.PlainAuth("", smtpV.User, smtpV.Password, smtpV.Host)
 	}
 
-	if smtpV.GetTemplate() != "" {
-		templateContent = mail.ReadTemplate(smtpV.GetTemplate())
+	if smtpV.Template != "" {
+		templateContent = m.ReadTemplate(smtpV.Template)
 	} else {
 		log.Fatalln("Not content to send. Use -template param and indicate the html or plain text file path")
 	}
 
-	recipients := mail.GetRecipients(smtpV.GetRecipients())
+	recipients, err := r.GetRecipients(smtpV.Recipients)
 
-	if smtpV.GetPathImage() != "" {
-		commonImages = mail.ReadFiles(smtpV.GetPathImage())
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	if smtpV.GetPathDocument() != "" {
-		commonDocuments = mail.ReadFiles(smtpV.GetPathDocument())
+	if smtpV.PathImage != "" {
+		commonImages = m.ReadFiles(smtpV.PathImage)
+	}
+
+	if smtpV.PathDocument != "" {
+		commonDocuments = m.ReadFiles(smtpV.PathDocument)
 	}
 
 	for _, recipient := range recipients {
 		var tempTemplate bytes.Buffer
 
 		m := struts.Mail{
-			From:    smtpV.GetFrom(),
+			From:    smtpV.From,
 			To:      recipient.Email,
-			Subject: smtpV.GetSubject(),
+			Subject: smtpV.Subject,
 		}
 
 		t, errT := template.New("emailTemplate").Parse(templateContent)
@@ -72,13 +76,11 @@ func main() {
 
 		t.Execute(&tempTemplate, &recipient)
 
-		m.SetBody(tempTemplate.String())
-		m.SetImage(commonImages)
-		m.SetDocument(commonDocuments)
+		m.Body = tempTemplate.String()
+		m.Image = commonImages
+		m.Document = commonDocuments
 
-		msg = mail.BuildMessage(m)
-		err := smtp.SendMail(smtpV.GetHost()+":"+smtpV.GetPort(), auth, smtpV.GetFrom(), []string{recipient.Email}, msg)
-		if err != nil {
+		if err := smtp.SendMail(smtpV.Host+":"+smtpV.Port, auth, smtpV.From, []string{recipient.Email}, m.BuildMessage()); err != nil {
 			log.Fatalln(err)
 		}
 	}
