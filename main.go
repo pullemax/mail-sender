@@ -12,9 +12,6 @@ import (
 
 func main() {
 	var auth smtp.Auth
-	var templateContent string
-	var commonImages []struts.Document
-	var commonDocuments []struts.Document
 	var smtpV = struts.Smtp{}
 	var r struts.Recipient
 	var m struts.Mail
@@ -40,7 +37,7 @@ func main() {
 	}
 
 	if smtpV.Template != "" {
-		templateContent = m.ReadTemplate(smtpV.Template)
+		m.ReadTemplate(smtpV.Template)
 	} else {
 		log.Fatalln("Not content to send. Use -template param and indicate the html or plain text file path")
 	}
@@ -52,23 +49,22 @@ func main() {
 	}
 
 	if smtpV.PathImage != "" {
-		commonImages = m.ReadFiles(smtpV.PathImage)
+		m.Image = m.ReadFiles(smtpV.PathImage)
 	}
 
 	if smtpV.PathDocument != "" {
-		commonDocuments = m.ReadFiles(smtpV.PathDocument)
+		m.Document = m.ReadFiles(smtpV.PathDocument)
 	}
+
+	m.From = smtpV.From
+	m.Subject = smtpV.Subject
 
 	for _, recipient := range recipients {
 		var tempTemplate bytes.Buffer
 
-		m := struts.Mail{
-			From:    smtpV.From,
-			To:      recipient.Email,
-			Subject: smtpV.Subject,
-		}
+		m.To = recipient.Email
 
-		t, errT := template.New("emailTemplate").Parse(templateContent)
+		t, errT := template.New("emailTemplate").Parse(m.Template)
 
 		if errT != nil {
 			log.Println(errT)
@@ -77,8 +73,6 @@ func main() {
 		t.Execute(&tempTemplate, &recipient)
 
 		m.Body = tempTemplate.String()
-		m.Image = commonImages
-		m.Document = commonDocuments
 
 		if err := smtp.SendMail(smtpV.Host+":"+smtpV.Port, auth, smtpV.From, []string{recipient.Email}, m.BuildMessage()); err != nil {
 			log.Fatalln(err)

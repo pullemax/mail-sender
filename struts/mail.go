@@ -16,6 +16,7 @@ type Mail struct {
 	From     string
 	To       string
 	Subject  string
+	Template string
 	Body     string
 	Image    []Document
 	Document []Document
@@ -49,13 +50,12 @@ func (m *Mail) BuildMessage() []byte {
 	return msg.Bytes()
 }
 
-func (m *Mail) ReadTemplate(path string) string {
+func (m *Mail) ReadTemplate(path string) {
 	content, err := ioutil.ReadFile(path)
 
-	if err != nil {
-		return ""
+	if err == nil {
+		m.Template = string(content)
 	}
-	return string(content)
 }
 
 func (m *Mail) ReadFiles(path string) []Document {
